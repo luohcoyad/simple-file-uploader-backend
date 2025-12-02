@@ -43,9 +43,18 @@ def _generate_thumbnail(data: bytes) -> Optional[bytes]:
         return buf.getvalue()
 
 
+def _build_stored_name(filename: Optional[str]) -> str:
+    # Keep only the extension (if ascii) to avoid invalid object keys with unicode or spaces
+    suffix = Path(filename or "").suffix
+    safe_suffix = "".join(
+        ch for ch in suffix if ch.isascii() and ch not in {"/", "\\", "?", "#", " "}
+    )
+    return f"{uuid.uuid4().hex}{safe_suffix.lower()}"
+
+
 def save_upload_file(upload: UploadFile, storage_dir: Path) -> Tuple[str, Optional[str]]:
-    """Upload file to Supabase Storage; returns (stored_name, size, thumbnail_name)."""
-    stored_name = f"{uuid.uuid4().hex}_{upload.filename}"
+    """Upload file to Supabase Storage; returns (stored_name, thumbnail_name)."""
+    stored_name = _build_stored_name(upload.filename)
     object_path = _build_object_path(storage_dir, stored_name)
 
     data = upload.file.read()
@@ -58,20 +67,22 @@ def save_upload_file(upload: UploadFile, storage_dir: Path) -> Tuple[str, Option
     )
 
     thumbnail_name = None
-    if upload.content_type and upload.content_type.startswith("image/"):
-        thumb_data = _generate_thumbnail(data)
-        if thumb_data:
-            thumbnail_name = f"{stored_name}.png"
-            thumb_path = _build_object_path(storage_dir, thumbnail_name)
-            try:
-                _upload_to_bucket(
-                    settings.supabase_thumbnail_bucket,
-                    thumb_path,
-                    thumb_data,
-                    "image/png",
-                )
-            except HTTPException:
-                thumbnail_name = None
+    if (
+        upload.content_type
+        and upload.content_type.startswith("image/")
+        and (thumb_data := _generate_thumbnail(data))
+    ):
+        thumbnail_name = f"{stored_name}.png"
+        thumb_path = _build_object_path(storage_dir, thumbnail_name)
+        try:
+            _upload_to_bucket(
+                settings.supabase_thumbnail_bucket,
+                thumb_path,
+                thumb_data,
+                "image/png",
+            )
+        except HTTPException:
+            thumbnail_name = None
 
     return stored_name, thumbnail_name
 
