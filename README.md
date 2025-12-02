@@ -21,3 +21,27 @@ FastAPI backend for authenticated file uploads with PostgreSQL.
 - Apply migrations: `pipenv run alembic upgrade head`
 - Roll back last migration: `pipenv run alembic downgrade -1`
 - Migrations read env vars (e.g., `DATABASE_URL`), so ensure your `.env` is in place before running them.
+
+
+## Architecture & Design Decisions
+
+- FastAPI app with JWT auth (cookie or bearer) and server-side sessions stored in PostgreSQL.
+- File metadata is stored in PostgreSQL; file binaries and thumbnails live in Supabase Storage with signed URLs.
+- CORS is configurable; API docs (`/docs`, `/redoc`, `/openapi.json`) are enabled only when `IS_DEBUG=1`.
+- Thumbnails are generated on upload for images (64px width, PNG) and stored in a dedicated bucket.
+
+## Trade-offs / Known Limitations
+
+- Uploads are read fully into memory; large uploads (capped at 50MB) can increase memory pressure.
+- Storage keys strip original filenames to avoid invalid characters; the original name is kept only in metadata.
+- No rate limiting or abuse protections are included.
+- Thumbnail generation is synchronous; slow image processing slows the request.
+
+## Future Improvements (Optional)
+
+- Add JWT `/refresh` and `/me` APIs.
+- Add Unit Test cases.
+- Stream uploads to reduce memory usage.
+- Implement JWT revoke with Redis rather than PostgreSQL.
+- Add rate limiting, logging/metrics, and improved observability.
+- Process File IO (upload, thumbnail, etc) `asynchronously`, such as using queue workers.
