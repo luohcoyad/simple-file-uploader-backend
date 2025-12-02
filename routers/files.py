@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from enum import IntEnum
 from pathlib import Path
 from typing import Optional
 from urllib.parse import quote
@@ -24,6 +25,11 @@ from database import get_db
 from dependencies import get_current_user
 
 router = APIRouter(prefix="/files", tags=["files"])
+
+
+class StorageAccessExpireTime(IntEnum):
+    FILE = 60 * 60 * 12
+    THUMBNAIL = 60 * 60
 
 
 @router.post("/upload", response_model=schemas.FileOut, status_code=status.HTTP_201_CREATED)
@@ -155,13 +161,13 @@ def download_file(
         Path(current_user.id.hex),
         asset.stored_name,
         thumbnail=False,
-        expires_in=60 * 60 * 12,
+        expires_in=StorageAccessExpireTime.FILE.value,
     )
 
     return JSONResponse(
         content={"url": signed_url, "filename": quote(asset.display_name)},
         headers={
-            "Cache-Control": "public, max-age=43200",
+            "Cache-Control": f"public, max-age={StorageAccessExpireTime.FILE.value}",
         },
     )
 
@@ -182,9 +188,12 @@ def get_thumbnail(
     if not asset.thumbnail_name:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Thumbnail not available")
     signed_url = storage.get_signed_url(
-        Path(current_user.id.hex), asset.thumbnail_name, thumbnail=True, expires_in=3600
+        Path(current_user.id.hex),
+        asset.thumbnail_name,
+        thumbnail=True,
+        expires_in=StorageAccessExpireTime.THUMBNAIL.value,
     )
     return JSONResponse(
         content={"url": signed_url},
-        headers={"Cache-Control": "public, max-age=3600"},
+        headers={"Cache-Control": f"public, max-age={StorageAccessExpireTime.THUMBNAIL.value}"},
     )

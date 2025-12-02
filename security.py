@@ -49,20 +49,21 @@ def create_access_token(
     return encoded_jwt
 
 
-def decode_access_token(token: str, allow_expired: bool = False) -> schemas.TokenData:
-    def _payload_to_token_data(payload: dict) -> schemas.TokenData:
-        uid_raw = payload.get("uid")
-        try:
-            uid_value = uuid.UUID(uid_raw) if uid_raw else None
-        except (ValueError, TypeError):
-            uid_value = None
-        return schemas.TokenData(
-            sub=payload.get("sub"),
-            exp=payload.get("exp"),
-            jti=payload.get("jti"),
-            user_id=uid_value,
-        )
+def _payload_to_token_data(payload: dict) -> schemas.TokenData:
+    uid_raw = payload.get("uid")
+    try:
+        uid_value = uuid.UUID(uid_raw) if uid_raw else None
+    except (ValueError, TypeError):
+        uid_value = None
+    return schemas.TokenData(
+        sub=payload.get("sub"),
+        exp=payload.get("exp"),
+        jti=payload.get("jti"),
+        user_id=uid_value,
+    )
 
+
+def decode_access_token(token: str, allow_expired: bool = False) -> schemas.TokenData:
     try:
         payload = jwt.decode(
             token,
