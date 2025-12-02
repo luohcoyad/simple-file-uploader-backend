@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "==0.123.0"
+uvicorn = "==0.38.0"
+sqlalchemy = "==2.0.44"
+psycopg2-binary = "==2.9.11"
+python-multipart = "==0.0.20"
+passlib = {extras = ["bcrypt"], version = "==1.7.4"}
+python-jose = {extras = ["cryptography"], version = "==3.5.0"}
+pydantic-settings = "==2.11.0"
+python-dotenv = "==1.2.1"
+pydantic = {extras = ["email"], version = "==2.12.5"}
+alembic = "==1.14.0"
+supabase = "==2.24.0"
+Pillow = "==11.0.0"
+
+[dev-packages]
+pytest = "*"
+
+[requires]
+python_version = "3.9"
