@@ -65,7 +65,8 @@ def login(
         key="access_token",
         value=token,
         httponly=True,
-        samesite="lax",
+        samesite="none",
+        secure=True,
         max_age=int(access_token_expires.total_seconds()),
     )
     return schemas.Token(access_token=token)
@@ -78,10 +79,12 @@ def logout(
     access_token_cookie: Optional[str] = Cookie(default=None, alias="access_token"),
     db: Session = Depends(get_db),
 ):
-    token_value = token or access_token_cookie
-    if not token_value:
+    if not token or not access_token_cookie:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    token_data = security.decode_access_token(token_value, allow_expired=True)
+    if token != access_token_cookie:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+    token_data = security.decode_access_token(token, allow_expired=True)
     if not token_data.sub or not token_data.jti or not token_data.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 

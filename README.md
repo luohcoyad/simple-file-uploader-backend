@@ -25,7 +25,7 @@ FastAPI backend for authenticated file uploads with PostgreSQL.
 
 ## Architecture & Design Decisions
 
-- FastAPI app with JWT auth (cookie or bearer) and server-side sessions stored in PostgreSQL.
+- FastAPI app with JWT auth (cookie and bearer) and server-side sessions stored in PostgreSQL.
 - File metadata is stored in PostgreSQL; file binaries and thumbnails live in Supabase Storage with signed URLs.
 - CORS is configurable; API docs (`/docs`, `/redoc`, `/openapi.json`) are enabled only when `IS_DEBUG=1`.
 - Thumbnails are generated on upload for images (64px width, PNG) and stored in a dedicated bucket.

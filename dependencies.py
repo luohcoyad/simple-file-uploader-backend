@@ -25,11 +25,12 @@ def get_current_user(
     access_token_cookie: Optional[str] = Cookie(default=None, alias="access_token"),
     db: Session = Depends(get_db),
 ) -> models.User:
-    token_value = token or access_token_cookie
-    if not token_value:
+    if not token or not access_token_cookie:
         raise _unauthorized("missing_token", "No access token provided")
+    if token != access_token_cookie:
+        raise _unauthorized("token_mismatch", "Header and cookie tokens must match")
 
-    token_data: TokenData = security.decode_access_token(token_value)
+    token_data: TokenData = security.decode_access_token(token)
     if not token_data.sub or not token_data.jti or not token_data.user_id:
         raise _unauthorized("invalid_token_claims", "Token is invalid or missing claims")
     session = (
