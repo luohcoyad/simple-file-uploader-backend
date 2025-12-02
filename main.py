@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from config import settings
-from routers import auth, files
+from routers import auth, files, health
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -55,6 +55,7 @@ def create_app() -> FastAPI:
 
     fast_api_app.include_router(auth.router)
     fast_api_app.include_router(files.router)
+    fast_api_app.include_router(health.router)
     return fast_api_app
 
 
